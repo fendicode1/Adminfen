@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - List Jualan</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border 0.3s;
+        }
+        input:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background: #2980b9;
+        }
+        .btn-delete {
+            background: #e74c3c;
+        }
+        .btn-delete:hover {
+            background: #c0392b;
+        }
+        .preview-list {
+            margin-top: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+        }
+        .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .item:last-child {
+            border-bottom: none;
+        }
+        .item-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .item-info img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .item-actions button {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+        .link-toko {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .link-toko a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 Admin - Tambah Barang Jualan</h1>
+        
+        <div class="form-group">
+            <label>Nama Barang</label>
+            <input type="text" id="nama" placeholder="Contoh: Sepatu Running" required>
+        </div>
+        <div class="form-group">
+            <label>Harga (Rp)</label>
+            <input type="number" id="harga" placeholder="Contoh: 150000" required>
+        </div>
+        <div class="form-group">
+            <label>URL Gambar</label>
+            <input type="text" id="gambar" placeholder="https://... atau /images/produk.jpg" value="https://placehold.co/400x400/3498db/white?text=Produk">
+        </div>
+        
+        <button class="btn" onclick="tambahBarang()">➕ Tambah ke List</button>
+        <button class="btn btn-delete" onclick="hapusSemua()">🗑️ Hapus Semua</button>
+        
+        <div class="link-toko">
+            <p>👉 <a href="index.html" target="_blank">Lihat Website Jualan (Halaman Pembeli)</a></p>
+        </div>
+
+        <div class="preview-list">
+            <h3>📋 Daftar Barang Saat Ini</h3>
+            <div id="listBarang"></div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'data_barang_jualan';
+
+        // Ambil data dari localStorage
+        function getDataBarang() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        // Simpan data ke localStorage
+        function simpanData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        // Render daftar di halaman admin
+        function renderListAdmin() {
+            const barang = getDataBarang();
+            const container = document.getElementById('listBarang');
+            
+            if (barang.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#7f8c8d;">Belum ada barang. Tambahkan di atas.</p>';
+                return;
+            }
+
+            let html = '';
+            barang.forEach((item, index) => {
+                html += `
+                    <div class="item">
+                        <div class="item-info">
+                            <img src="${item.gambar}" alt="${item.nama}" onerror="this.src='https://placehold.co/50x50/ddd/333?text=No+Img'">
+                            <div>
+                                <strong>${item.nama}</strong><br>
+                                <span>Rp ${Number(item.harga).toLocaleString('id-ID')}</span>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <button onclick="hapusBarang(${index})" title="Hapus">❌</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // Fungsi tambah barang
+        function tambahBarang() {
+            const nama = document.getElementById('nama').value.trim();
+            const harga = document.getElementById('harga').value;
+            const gambar = document.getElementById('gambar').value.trim();
+
+            if (!nama || !harga) {
+                alert('Nama dan Harga wajib diisi!');
+                return;
+            }
+
+            const barangBaru = {
+                nama: nama,
+                harga: parseInt(harga),
+                gambar: gambar || 'https://placehold.co/400x400/3498db/white?text=' + encodeURIComponent(nama)
+            };
+
+            const dataLama = getDataBarang();
+            dataLama.push(barangBaru);
+            simpanData(dataLama);
+
+            // Reset form
+            document.getElementById('nama').value = '';
+            document.getElementById('harga').value = '';
+            document.getElementById('gambar').value = '';
+
+            renderListAdmin();
+        }
+
+        // Fungsi hapus satu barang
+        function hapusBarang(index) {
+            if (confirm('Hapus barang ini?')) {
+                const data = getDataBarang();
+                data.splice(index, 1);
+                simpanData(data);
+                renderListAdmin();
+            }
+        }
+
+        // Fungsi hapus semua
+        function hapusSemua() {
+            if (confirm('HAPUS SEMUA BARANG? Data tidak bisa dikembalikan.')) {
+                localStorage.removeItem(STORAGE_KEY);
+                renderListAdmin();
+            }
+        }
+
+        // Inisialisasi
+        renderListAdmin();
+    </script>
+</body>
+</html>
